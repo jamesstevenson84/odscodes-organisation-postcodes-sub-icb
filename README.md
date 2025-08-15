@@ -32,10 +32,11 @@ This project helps find healthcare Organisations that are part of Brighton's loc
 5. **The Output**
    
    We've created a simple list (CSV file) that shows:
-   - The official code for each organization
+   - The official code for each organization (ODS Code)
    - The organization's name
    - Where it's located (postcode)
-   - What type of organization it is
+   - The organization's filtered role type
+   - All the organization's roles (as a comma-separated list)
 
 ## Why This Matters
 
@@ -51,9 +52,9 @@ The script uses the NHS ODS (Organisation Data Service) API to search for Organi
 
 1. **Search Process**: Searches for Organisations using the provided postcode list with the correct API parameter (`searchQueryGeneral`)
 2. **Filtering**: Filters results for only Organisations with "Active" status and "SUB ICB LOCATION" role
-3. **Data Extraction**: Extracts the needed fields (ODS Code, Name, and Postcode)
+3. **Data Extraction**: Extracts key fields (ODS Code, Name, Postcode) and role information
 4. **Deduplication**: Removes duplicates based on ODS Code as the key
-5. **Output**: Saves everything to a CSV file
+5. **Output**: Saves everything to a CSV file with detailed role information
 
 ### Step-by-Step Process
 
@@ -70,9 +71,40 @@ The script found 3 unique Sub-ICB Organisations across all the postcodes, out of
 - Python 3.x
 - Requests library (`pip install requests`)
 
+### Local Setup & Running
+To set up and run the script locally:
+
+1. Ensure you have Python 3 installed (macOS usually comes with Python 3).
+2. Open a terminal and navigate to your project directory:
+   ```sh
+   cd /Users/jamesstevenson/Documents/python
+   ```
+3. (Recommended) Create and activate a virtual environment:
+   ```sh
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+4. If you have a `requirements.txt` file, install dependencies:
+   ```sh
+   pip install -r requirements.txt
+   ```
+5. Run the script:
+   ```sh
+   python3 brighton-sub-icb-orgs.py
+   ```
+
 ### Running the Script
 ```bash
 python brighton-sub-icb-orgs.py
 ```
+
+When you run the script, you'll be prompted with:
+1. Whether you want to filter by role name (Y/N)
+2. If yes, which role name to search for
+
+This allows you to:
+- Search for any type of healthcare organization role
+- Filter using partial text matches (doesn't need to be an exact match)
+- Get all active organizations without role filtering
 
 The output will be saved as `brighton_sub_icb_orgs.csv`.

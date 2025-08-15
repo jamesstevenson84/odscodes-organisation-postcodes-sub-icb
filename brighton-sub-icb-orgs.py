@@ -2,6 +2,7 @@ import requests
 import csv
 import time
 import json
+import sys
 
 # API URL for ODS data search
 API_URL = "https://www.odsdatasearchandexport.nhs.uk/api/search/organisationGeneralSearch"
@@ -18,17 +19,37 @@ postcodes = [
     "RH16 4", "RH17 5", "RH17 6", "RH17 7", "TN22 5"
 ]
 
+# Define constant for the SUB ICB LOCATION role
+SUB_ICB_ROLE = "SUB ICB LOCATION"
+
+# Ask user if they want to filter by roleName
+filter_by_role = input("Do you want to filter by role name? (Y/N): ").strip().upper() == "Y"
+
+if filter_by_role:
+    print(f"Common role names include: '{SUB_ICB_ROLE}', 'GP PRACTICE', 'PHARMACY', 'HOSPITAL', etc.")
+    role_filter = input("Enter the role name to search for: ").strip()
+    print(f"Filtering for active organizations with role: {role_filter}")
+else:
+    role_filter = None
+    print("No role filter applied - will return all active organizations (inactive organizations will be excluded)")
+
 results = []
 
 # Define constants for field names to avoid duplication
 ODS_CODE = "ODS Code"
 NAME = "Name"
 POSTCODE = "Postcode"
+ROLE_NAMES = "Role Names"
+ROLE_TYPE = "Role Type"
 
-print(f"Searching for SUB ICB LOCATION organizations in {len(postcodes)} postcodes...")
+# Set message based on filtering option
+if filter_by_role:
+    print(f"Searching for active organizations with role '{role_filter}' in {len(postcodes)} postcodes...")
+else:
+    print(f"Searching for all active organizations in {len(postcodes)} postcodes...")
 
 # For tracking our findings
-sub_icb_count = 0
+found_count = 0
 
 # Process each postcode
 for pc in postcodes:
@@ -58,24 +79,51 @@ for pc in postcodes:
             
             # Process each organization
             for org in data["orgArray"]:
-                # Only include active organizations with SUB ICB LOCATION role
+                # Check if the organization is active - we only include active organizations
                 is_active = org.get("status") == "Active"
-                role_names = org.get("roleName", [])
                 
-                # Check if "SUB ICB LOCATION" or "ICB" is in the roleName list (case-insensitive)
-                is_sub_icb = any(role and "SUB ICB LOCATION" in role.upper() for role in role_names)
-                is_icb = any(role and role.upper() == "ICB" for role in role_names)
+                # Skip any inactive organizations
+                if not is_active:
+                    continue
                 
-                if is_active and (is_sub_icb or is_icb):
-                    # Add this organization to our results
-                    sub_icb_count += 1
-                    role_type = "ICB" if is_icb else "SUB ICB LOCATION"
+                should_include = True
+                role_type = ""
+                
+                # If we need to filter by role name
+                if filter_by_role:
+                    role_names = org.get("roleName", [])
+                    
+                    # Special case for SUB ICB LOCATION and ICB roles
+                    if role_filter.upper() == SUB_ICB_ROLE.upper():
+                        # Check for SUB ICB LOCATION or ICB in the role names
+                        is_sub_icb = any(role and SUB_ICB_ROLE.upper() in role.upper() for role in role_names)
+                        is_icb = any(role and role.upper() == "ICB" for role in role_names)
+                        should_include = is_sub_icb or is_icb
+                        role_type = "ICB" if is_icb else SUB_ICB_ROLE
+                    else:
+                        # For any other role filter, check for partial matches in the role names
+                        matched_roles = [role for role in role_names if role and role_filter.upper() in role.upper()]
+                        should_include = len(matched_roles) > 0
+                        # Use the first matching role as the role_type for display
+                        role_type = matched_roles[0] if matched_roles else role_filter
+                    
+                # If all checks pass, include this organization
+                if should_include:
+                    found_count += 1
+                    if not role_type:
+                        role_type = "Active"
+                        
+                    # Get the full list of role names as a comma-separated string
+                    role_names_list = org.get("roleName", [])
+                    role_names_str = ", ".join(role_names_list) if role_names_list else ""
+                    
                     print(f"  Found {role_type}: {org.get('name')} (ODS: {org.get('id')})")
                     results.append({
                         ODS_CODE: org.get("id", ""),
                         NAME: org.get("name", ""),
                         POSTCODE: org.get("postcode", ""),
-                        "Role": role_type
+                        ROLE_TYPE: role_type,
+                        ROLE_NAMES: role_names_str
                     })
         else:
             print(f"No organizations found for {pc}")
@@ -90,9 +138,13 @@ unique_results = {item[ODS_CODE]: item for item in results}.values()
 
 # Save to CSV
 with open("brighton_sub_icb_orgs.csv", "w", newline="", encoding="utf-8") as f:
-    writer = csv.DictWriter(f, fieldnames=[ODS_CODE, NAME, POSTCODE, "Role"])
+    writer = csv.DictWriter(f, fieldnames=[ODS_CODE, NAME, POSTCODE, ROLE_TYPE, ROLE_NAMES])
     writer.writeheader()
     writer.writerows(unique_results)
 
-print(f"Found {sub_icb_count} total SUB ICB LOCATION organizations")
-print(f"Saved {len(unique_results)} unique organisations with SUB ICB LOCATION role to brighton_sub_icb_orgs.csv")
+if filter_by_role:
+    print(f"Found {found_count} total organizations with '{role_filter}' role")
+    print(f"Saved {len(unique_results)} unique organizations with '{role_filter}' role to brighton_sub_icb_orgs.csv")
+else:
+    print(f"Found {found_count} total active organizations")
+    print(f"Saved {len(unique_results)} unique active organizations to brighton_sub_icb_orgs.csv")
