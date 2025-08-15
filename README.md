@@ -48,6 +48,17 @@ The identification of these specific Organisations could be useful for anyone ne
 
 The script uses the NHS ODS (Organisation Data Service) API to search for Organisations by postcode and filters them based on their role designation. It processes data from 58 postcodes in the Brighton and Sussex area.
 
+### Why Use This Script Instead of the Portal?
+
+The same data is available through the official ODS Data Search and Export Portal:
+https://www.odsdatasearchandexport.nhs.uk/
+
+However, this script was created because the portal doesn't support bulk postcode searches. With 58 postcodes to search across Brighton and Sussex, the script provides an automated way to:
+- Search multiple postcodes in one go
+- Apply consistent filtering across all results
+- Automatically combine and deduplicate results
+- Save time compared to manual searching through the portal
+
 ### How the Script Works
 
 1. **Search Process**: Searches for Organisations using the provided postcode list with the correct API parameter (`searchQueryGeneral`)
