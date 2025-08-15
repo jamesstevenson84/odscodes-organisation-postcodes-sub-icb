@@ -74,7 +74,16 @@ The script found 3 unique Sub-ICB Organisations across all the postcodes, out of
 ### Local Setup & Running
 To set up and run the script locally:
 
-1. Ensure you have Python 3 installed (macOS usually comes with Python 3).
+1. Ensure you have Python 3 installed:
+   - macOS may come with Python 3, but you can install the latest version using Homebrew:
+   ```sh
+   # Install Homebrew if not already installed
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   
+   # Install Python 3
+   brew install python
+   ```
+   
 2. Open a terminal and navigate to your project directory:
    ```sh
    cd /path/to/python/project
@@ -84,10 +93,12 @@ To set up and run the script locally:
    python3 -m venv venv
    source venv/bin/activate
    ```
-4. If you have a `requirements.txt` file, install dependencies:
+4. Install the required dependencies from the requirements.txt file:
    ```sh
    pip install -r requirements.txt
    ```
+   
+   Note: The requirements.txt file lists all the Python packages needed by the script. In this case, it contains the 'requests' library which is needed to make API calls.
 5. Run the script:
    ```sh
    python3 brighton-sub-icb-orgs.py
