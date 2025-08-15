@@ -77,7 +77,7 @@ To set up and run the script locally:
 1. Ensure you have Python 3 installed (macOS usually comes with Python 3).
 2. Open a terminal and navigate to your project directory:
    ```sh
-   cd /Users/jamesstevenson/Documents/python
+   cd /path/to/python/project
    ```
 3. (Recommended) Create and activate a virtual environment:
    ```sh
